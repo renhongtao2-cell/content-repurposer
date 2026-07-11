@@ -1,4 +1,4 @@
-# ContentRepurposer
+﻿# ContentRepurposer
 
 Write once, publish everywhere. AI-powered social media content repurposing tool.
 
@@ -51,7 +51,7 @@ npm run build
 npm start
 `
 
-## Deploy to Vercel (Free)
+## Deploy to Vercel (Free) - Updated 2026-07-11 14:05
 
 1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com) and sign up
