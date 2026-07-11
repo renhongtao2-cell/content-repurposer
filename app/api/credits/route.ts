@@ -20,8 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Credits must be >= 1" }, { status: 400 });
     }
 
-    const pricePerCredit = 50; // cents
-    const amount = credits * pricePerCredit;
+    // Pricing tiers (in cents)
+    let amount: number;
+    if (credits <= 5) {
+      amount = 200; // $2.00
+    } else if (credits <= 30) {
+      amount = 800; // $8.00
+    } else {
+      amount = 1500; // $15.00
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
