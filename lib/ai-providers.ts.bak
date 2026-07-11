@@ -1,0 +1,138 @@
+﻿// AI Providers - Domestic-friendly (OpenAI-compatible format)
+// Supports: Moonshot, DeepSeek, 智谱(GLM), 通义(Qwen)
+
+export type AIProvider = 'moonshot' | 'deepseek' | 'zhipu' | 'qwen';
+
+export interface AIProviderConfig {
+  provider: AIProvider;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}
+
+export const DEFAULT_PROVIDERS: Record<AIProvider, Omit<AIProviderConfig, 'apiKey'>> = {
+  moonshot: {
+    provider: 'moonshot',
+    baseUrl: 'https://api.moonshot.cn/v1',
+    model: 'moonshot-v1-8k',
+  },
+  deepseek: {
+    provider: 'deepseek',
+    baseUrl: 'https://api.deepseek.com/v1',
+    model: 'deepseek-chat',
+  },
+  zhipu: {
+    provider: 'zhipu',
+    baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    model: 'glm-4-flash',
+  },
+  qwen: {
+    provider: 'qwen',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    model: 'qwen-turbo',
+  },
+};
+
+export const PROVIDER_LABELS: Record<AIProvider, string> = {
+  moonshot: 'Moonshot (Kimi)',
+  deepseek: 'DeepSeek',
+  zhipu: '智谱 GLM',
+  qwen: '通义千问',
+};
+
+export const PROVIDER_DESCRIPTIONS: Record<AIProvider, string> = {
+  moonshot: '月之暗面 Kimi，中文理解强，速度快',
+  deepseek: '深度求索，性价比高，代码能力强',
+  zhipu: '智谱AI GLM-4-Flash，免费额度充足',
+  qwen: '阿里通义千问，综合能力强',
+};
+
+// Unified OpenAI-compatible API caller
+async function callOpenAICompatible(
+  config: AIProviderConfig,
+  prompt: string
+): Promise<string> {
+  const response = await fetch(`${config.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`${config.provider} API error (${response.status}): ${err}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// Provider dispatcher
+export async function callAIProvider(
+  provider: AIProvider,
+  apiKey: string,
+  prompt: string
+): Promise<string> {
+  const baseConfig = DEFAULT_PROVIDERS[provider];
+  if (!baseConfig) {
+    throw new Error(`Unknown provider: ${provider}`);
+  }
+
+  return callOpenAICompatible({
+    ...baseConfig,
+    apiKey,
+  }, prompt);
+}
+
+// Try all configured providers, return first success
+export async function callAnyProvider(prompt: string): Promise<string> {
+  const providers: AIProvider[] = ['moonshot', 'deepseek', 'zhipu', 'qwen'];
+  const errors: string[] = [];
+
+  for (const provider of providers) {
+    const envVarName = `${provider.toUpperCase()}_API_KEY`;
+    const apiKey = process.env[envVarName] || '';
+
+    if (!apiKey) {
+      errors.push(`${provider}: no API key set`);
+      continue;
+    }
+
+    try {
+      const result = await callAIProvider(provider, apiKey, prompt);
+      console.log(`[AI] Success with ${provider}`);
+      return result;
+    } catch (e) {
+      errors.push(`${provider}: ${(e as Error).message}`);
+      console.log(`[AI] ${provider} failed:`, e);
+    }
+  }
+
+  throw new Error(
+    'All AI providers failed. Errors: ' + errors.join(' | ') +
+    '. Please set at least one API key in environment variables.'
+  );
+}
+
+// Get available providers list
+export function getAvailableProviders(): { id: AIProvider; label: string; description: string; available: boolean }[] {
+  const envKeys = Object.keys(process.env);
+  return Object.entries(DEFAULT_PROVIDERS).map(([id, config]) => {
+    const envVarName = `${id.toUpperCase()}_API_KEY`;
+    const hasKey = envKeys.includes(envVarName);
+    return {
+      id: id as AIProvider,
+      label: PROVIDER_LABELS[id as AIProvider],
+      description: PROVIDER_DESCRIPTIONS[id as AIProvider],
+      available: !!hasKey,
+    };
+  });
+}

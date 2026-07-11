@@ -14,52 +14,57 @@ Write once, publish everywhere. AI-powered social media content repurposing tool
 
 - **Framework**: Next.js 16 (App Router)
 - **Styling**: TailwindCSS v4
-- **AI**: Google Gemini 2.0 Flash
+- **AI**: Moonshot / DeepSeek / 智谱GLM / 通义千问 (OpenAI-compatible)
 - **Deployment**: Vercel (free tier)
 
 ## Getting Started
 
 ### 1. Clone and install
 
-`ash
+```bash
 cd content-repurposer
 npm install
-`
+```
 
 ### 2. Set up environment variables
 
-`ash
+```bash
 cp .env.example .env.local
-`
+```
 
-Edit .env.local and add your Google API key:
-- Get a free key at: https://aistudio.google.com/apikey
-- Key format: GOOGLE_API_KEY=AIza...
+Edit `.env.local` and add **at least one** API key from the providers below:
+
+| Provider | API Key Env Var | Register | Model |
+|----------|----------------|----------|-------|
+| **Moonshot (Kimi)** | `MOONSHOT_API_KEY` | https://platform.moonshot.cn/ | moonshot-v1-8k |
+| **DeepSeek** | `DEEPSEEK_API_KEY` | https://platform.deepseek.com/ | deepseek-chat |
+| **智谱 GLM** | `ZHIPU_API_KEY` | https://open.bigmodel.cn/ | glm-4-flash (免费) |
+| **通义千问** | `QWEN_API_KEY` | https://dashscope.console.aliyun.com/ | qwen-turbo (免费) |
+
+> **推荐**: 智谱 GLM-4-Flash 完全免费，通义千问 qwen-turbo 也有免费额度。
 
 ### 3. Run development server
 
-`ash
+```bash
 npm run dev
-`
+```
 
 Open [http://localhost:3000](http://localhost:3000)
 
 ### 4. Build for production
 
-`ash
+```bash
 npm run build
 npm start
-`
+```
 
-## Deploy to Vercel (Free) - Updated 2026-07-11 14:05
+## Deploy to Vercel (Free)
 
 1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com) and sign up
 3. Import your repository
-4. Add environment variable GOOGLE_API_KEY
+4. Add **at least one** AI API key in Environment Variables (e.g. `ZHIPU_API_KEY`)
 5. Click Deploy
-
-That's it! Your app is live.
 
 ## Waitlist Storage
 
