@@ -173,6 +173,32 @@ export default function App() {
             {scrapedTitle && !urlError && (
               <p className="mt-2 text-sm text-green-400">✅ Scraped: {scrapedTitle}</p>
             )}
+            <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl text-left">
+              <p className="text-xs text-gray-400 font-medium mb-2">URL Scraping Guide</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p className="text-green-400 font-medium mb-1">✅ Works well</p>
+                  <ul className="text-gray-500 space-y-0.5">
+                    <li>• Standard blogs (WordPress, Ghost)</li>
+                    <li>• News sites (CNN, BBC, Reuters)</li>
+                    <li>• Tech blogs (Dev.to, Cloudflare Blog)</li>
+                    <li>• Company blogs (Vercel, Stripe)</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-red-400 font-medium mb-1">❌ May not work</p>
+                  <ul className="text-gray-500 space-y-0.5">
+                    <li>• JS-heavy sites (Substack, Medium SPA)</li>
+                    <li>• Paywalled content</li>
+                    <li>• Sites with strict anti-bot</li>
+                    <li>• Single-page apps (React/Vue rendered)</li>
+                  </ul>
+                </div>
+              </div>
+              <p className="text-gray-600 mt-2">
+                💡 If scraping fails, copy-paste the article text directly.
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -350,4 +376,5 @@ function ResultCard({ item }: { item: PlatformContent }) {
     </div>
   );
 }
+
 
