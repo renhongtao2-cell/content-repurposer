@@ -27,7 +27,7 @@ export const DEFAULT_PROVIDERS: Record<AIProvider, ProviderConfig> = {
   },
   agnes: {
     baseUrl: "https://apihub.agnes-ai.com/v1",
-    model: "agnes-text",
+    model: "agnes-2.0-flash",
   },
 };
 
@@ -142,3 +142,4 @@ export function getAvailableProviders(): {
     available: !!envKeys.includes(envVar),
   }));
 }
+
