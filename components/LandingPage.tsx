@@ -31,6 +31,48 @@ export default function LandingPage() {
     }
   };
 
+  const handleBuy = async (credits: number) => {
+    try {
+      const res = await fetch("/api/credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credits }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (data.url) window.location.href = data.url;
+    } catch (e: any) {
+      alert(e.message || "Payment system not configured yet. Stay tuned!");
+    }
+  };
+
+  const plans = [
+    {
+      name: "Starter",
+      price: "$2",
+      credits: 5,
+      desc: "Perfect for trying out",
+      features: ["5 repurposes", "All platforms", "Basic tones"],
+      highlighted: false,
+    },
+    {
+      name: "Creator",
+      price: "$8",
+      credits: 30,
+      desc: "Most popular",
+      features: ["30 repurposes", "All platforms", "All tones", "Priority queue"],
+      highlighted: true,
+    },
+    {
+      name: "Pro",
+      price: "$15",
+      credits: 75,
+      desc: "For serious marketers",
+      features: ["75 repurposes", "All platforms", "All tones", "Priority queue", "Bulk export"],
+      highlighted: false,
+    },
+  ];
+
   return (
     <section className="relative px-6 pt-20 pb-16 md:pt-32 md:pb-24 text-center overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-3xl pointer-events-none" />
@@ -52,32 +94,7 @@ export default function LandingPage() {
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
-          {[
-            {
-              name: "Starter",
-              price: "$2",
-              credits: "5 Credits",
-              desc: "Perfect for trying out",
-              features: ["5 repurposes", "All platforms", "Basic tones"],
-              highlighted: false,
-            },
-            {
-              name: "Creator",
-              price: "$8",
-              credits: "30 Credits",
-              desc: "Most popular",
-              features: ["30 repurposes", "All platforms", "All tones", "Priority queue"],
-              highlighted: true,
-            },
-            {
-              name: "Pro",
-              price: "$15",
-              credits: "75 Credits",
-              desc: "For serious marketers",
-              features: ["75 repurposes", "All platforms", "All tones", "Priority queue", "Bulk export"],
-              highlighted: false,
-            },
-          ].map((plan) => (
+          {plans.map((plan) => (
             <div
               key={plan.name}
               className={`rounded-2xl p-6 border text-left transition-all ${
@@ -89,7 +106,7 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
               <p className="text-xs text-gray-500 mb-3">{plan.desc}</p>
               <p className="text-3xl font-bold mb-1">{plan.price}</p>
-              <p className="text-sm text-gray-400 mb-4">{plan.credits}</p>
+              <p className="text-sm text-gray-400 mb-4">{plan.credits} Credits</p>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((f) => (
                   <li key={f} className="text-xs text-gray-400 flex items-center gap-2">
@@ -97,7 +114,10 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <button className="w-full py-2 rounded-xl text-sm font-medium transition-all border bg-gradient-to-r from-blue-500 to-purple-500 border-transparent text-white hover:from-blue-600 hover:to-purple-600">
+              <button
+                onClick={() => handleBuy(plan.credits)}
+                className="w-full py-2 rounded-xl text-sm font-medium transition-all border bg-gradient-to-r from-blue-500 to-purple-500 border-transparent text-white hover:from-blue-600 hover:to-purple-600"
+              >
                 Get Started
               </button>
             </div>
