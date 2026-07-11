@@ -17,6 +17,7 @@ export default function App() {
   const [urlScraping, setUrlScraping] = useState(false);
   const [urlError, setUrlError] = useState("");
   const [sourceContent, setSourceContent] = useState("");
+  const [scrapedTitle, setScrapedTitle] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["twitter", "linkedin"]);
   const [selectedTone, setSelectedTone] = useState("professional");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +26,6 @@ export default function App() {
   const [credits, setCredits] = useState<number | null>(null);
   const [showBuyCredits, setShowBuyCredits] = useState(false);
 
-  // Load credits from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("credits");
     if (saved) setCredits(parseInt(saved, 10));
@@ -69,8 +69,9 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to scrape URL");
       const extra = data.data.author ? `\n\nAuthor: ${data.data.author}\nPublished: ${data.data.publishedDate || "N/A"}` : "";
+      setScrapedTitle(data.data.title);
       setSourceContent(`Title: ${data.data.title}\n\n${data.data.content}${extra}`);
-      setInputMode("paste");
+      setInputMode("paste"); // switch to paste mode with scraped content
     } catch (e: any) {
       setUrlError(e.message || "Failed to fetch content");
     } finally {
@@ -81,12 +82,7 @@ export default function App() {
   const handleSubmit = async () => {
     if (!sourceContent.trim()) { setError("Please enter some content or scrape a URL"); return; }
     if (selectedPlatforms.length === 0) { setError("Please select at least one platform"); return; }
-
-    // Check credits
-    if (credits === 0) {
-      setShowBuyCredits(true);
-      return;
-    }
+    if (credits === 0) { setShowBuyCredits(true); return; }
 
     setIsLoading(true); setError(""); setResults([]);
     try {
@@ -98,7 +94,6 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       setResults(data.data);
-      // Deduct credit
       if (credits !== null) saveCredits(credits - 1);
     } catch (e: any) {
       setError(e.message || "Failed to generate content");
@@ -111,24 +106,21 @@ export default function App() {
 
   return (
     <div className="px-6 pb-16 max-w-4xl mx-auto">
-      {/* Credits display */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-400">
-            {credits === null ? "Free Beta" : `${credits} credit${credits !== 1 ? "s" : ""} left`}
+            {credits === null ? "🎉 Free Beta" : `💰 ${credits} credit${credits !== 1 ? "s" : ""} left`}
           </span>
           {credits !== null && credits <= 3 && (
-            <button
-              onClick={() => setShowBuyCredits(true)}
-              className="text-xs text-blue-400 hover:text-blue-300 underline"
-            >
+            <button onClick={() => setShowBuyCredits(true)} className="text-xs text-blue-400 hover:text-blue-300 underline">
               Buy more →
             </button>
           )}
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setInputMode("paste")}
+            onClick={() => { setInputMode("paste"); setScrapedTitle(""); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
               inputMode === "paste"
                 ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
@@ -138,7 +130,7 @@ export default function App() {
             📝 Paste Text
           </button>
           <button
-            onClick={() => setInputMode("url")}
+            onClick={() => { setInputMode("url"); setSourceContent(""); setScrapedTitle(""); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
               inputMode === "url"
                 ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
@@ -151,12 +143,14 @@ export default function App() {
       </div>
 
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8">
-        <h2 className="text-2xl font-semibold mb-6">Paste Your Content</h2>
+        <h2 className="text-2xl font-semibold mb-2">
+          {inputMode === "url" ? "Extract from URL" : "Paste Your Content"}
+        </h2>
 
         {inputMode === "url" ? (
           <div className="mb-6">
             <p className="text-sm text-gray-400 mb-3">
-              Enter a blog/article URL and we'll extract the content automatically.
+              Enter a blog/article URL. We'll extract the content automatically.
             </p>
             <div className="flex gap-2">
               <input
@@ -165,6 +159,7 @@ export default function App() {
                 onChange={(e) => setSourceUrl(e.target.value)}
                 placeholder="https://example.com/blog/post-title"
                 className="flex-1 px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
+                onKeyDown={(e) => { if (e.key === "Enter") handleScrape(); }}
               />
               <button
                 onClick={handleScrape}
@@ -175,18 +170,30 @@ export default function App() {
               </button>
             </div>
             {urlError && <p className="mt-2 text-sm text-red-400">{urlError}</p>}
+            {scrapedTitle && !urlError && (
+              <p className="mt-2 text-sm text-green-400">✅ Scraped: {scrapedTitle}</p>
+            )}
           </div>
         ) : (
-          <textarea
-            value={sourceContent}
-            onChange={(e) => setSourceContent(e.target.value)}
-            placeholder="Paste your blog post, article, video transcript, or any content here..."
-            className="w-full h-48 bg-black/30 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-base leading-relaxed mb-4"
-          />
-        )}
-
-        {inputMode === "paste" && sourceContent && (
-          <div className="text-right text-xs text-gray-500 mb-6">{wordCount} words</div>
+          <>
+            {scrapedTitle && (
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-blue-400">📄 From: {scrapedTitle}</span>
+                <button onClick={() => { setSourceContent(""); setScrapedTitle(""); setInputMode("url"); }} className="text-xs text-gray-500 hover:text-gray-300">
+                  ← Change URL
+                </button>
+              </div>
+            )}
+            <textarea
+              value={sourceContent}
+              onChange={(e) => setSourceContent(e.target.value)}
+              placeholder={scrapedTitle ? "Content extracted from URL. Edit it here before generating..." : "Paste your blog post, article, video transcript, or any content here..."}
+              className="w-full h-48 bg-black/30 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-base leading-relaxed mb-4"
+            />
+            {sourceContent && (
+              <div className="text-right text-xs text-gray-500 mb-6">{wordCount} words</div>
+            )}
+          </>
         )}
 
         {/* Platform selection */}
@@ -261,9 +268,7 @@ export default function App() {
           <div className="text-center">
             <button
               onClick={() => {
-                const all = results
-                  .map((r) => `--- ${r.title} ---\n${r.content}`)
-                  .join("\n\n");
+                const all = results.map((r) => `--- ${r.title} ---\n${r.content}`).join("\n\n");
                 navigator.clipboard.writeText(all);
               }}
               className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors text-sm"
@@ -306,12 +311,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowBuyCredits(false)}
-              className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
+            <button onClick={() => setShowBuyCredits(false)} className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
           </div>
         </div>
       )}
@@ -331,31 +331,18 @@ function ResultCard({ item }: { item: PlatformContent }) {
       <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-lg">{item.title}</h3>
-          <span className="text-xs text-gray-500 capitalize">
-            {item.platform} — {item.characterCount} chars
-          </span>
+          <span className="text-xs text-gray-500 capitalize">{item.platform} — {item.characterCount} chars</span>
         </div>
-        <button
-          onClick={handleCopy}
-          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-          title="Copy"
-        >
+        <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Copy">
           {copied ? "✅ Copied" : "📋 Copy"}
         </button>
       </div>
       <div className="p-6">
-        <pre className="whitespace-pre-wrap font-sans text-gray-300 text-sm leading-relaxed bg-black/20 rounded-xl p-4">
-          {item.content}
-        </pre>
+        <pre className="whitespace-pre-wrap font-sans text-gray-300 text-sm leading-relaxed bg-black/20 rounded-xl p-4">{item.content}</pre>
         {item.hashtags && item.hashtags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1">
             {item.hashtags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded"
-              >
-                {tag}
-              </span>
+              <span key={tag} className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded">{tag}</span>
             ))}
           </div>
         )}
