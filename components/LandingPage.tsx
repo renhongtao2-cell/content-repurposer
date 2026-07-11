@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -49,6 +49,62 @@ export default function LandingPage() {
           Stop writing the same content over and over. Paste your blog post, article, or transcript —
           we will transform it into ready-to-publish content for Twitter, LinkedIn, Instagram, and more.
         </p>
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
+          {[
+            {
+              name: "Starter",
+              price: "$2",
+              credits: "5 Credits",
+              desc: "Perfect for trying out",
+              features: ["5 repurposes", "All platforms", "Basic tones"],
+              highlighted: false,
+            },
+            {
+              name: "Creator",
+              price: "$8",
+              credits: "30 Credits",
+              desc: "Most popular",
+              features: ["30 repurposes", "All platforms", "All tones", "Priority queue"],
+              highlighted: true,
+            },
+            {
+              name: "Pro",
+              price: "$15",
+              credits: "75 Credits",
+              desc: "For serious marketers",
+              features: ["75 repurposes", "All platforms", "All tones", "Priority queue", "Bulk export"],
+              highlighted: false,
+            },
+          ].map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-2xl p-6 border text-left transition-all ${
+                plan.highlighted
+                  ? "bg-gradient-to-b from-blue-500/10 to-purple-500/10 border-blue-500/30 ring-1 ring-blue-500/20"
+                  : "bg-white/5 border-white/10"
+              }`}
+            >
+              <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
+              <p className="text-xs text-gray-500 mb-3">{plan.desc}</p>
+              <p className="text-3xl font-bold mb-1">{plan.price}</p>
+              <p className="text-sm text-gray-400 mb-4">{plan.credits}</p>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((f) => (
+                  <li key={f} className="text-xs text-gray-400 flex items-center gap-2">
+                    <span className="text-green-400">✓</span> {f}
+                  </li>
+                ))}
+              </ul>
+              <button className="w-full py-2 rounded-xl text-sm font-medium transition-all border bg-gradient-to-r from-blue-500 to-purple-500 border-transparent text-white hover:from-blue-600 hover:to-purple-600">
+                Get Started
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Waitlist */}
         <div className="max-w-md mx-auto mb-8">
           <form onSubmit={handleJoin} className="flex flex-col sm:flex-row gap-2">
             <input
@@ -77,9 +133,9 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
-          <span>⚡ No credit card required</span>
+          <span>💳 No credit card required</span>
           <span>•</span>
-          <span>🆓 Free beta</span>
+          <span>🎉 Free beta</span>
           <span>•</span>
           <span>🔒 Private and secure</span>
         </div>
