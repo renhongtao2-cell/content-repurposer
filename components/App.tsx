@@ -350,3 +350,4 @@ function ResultCard({ item }: { item: PlatformContent }) {
     </div>
   );
 }
+
